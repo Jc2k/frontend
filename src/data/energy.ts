@@ -126,6 +126,7 @@ export interface EnergyPreferences {
 
 export interface EnergyInfo {
   cost_sensors: Record<string, string>;
+  solar_forecast_domains: string[];
 }
 
 export const getEnergyInfo = (hass: HomeAssistant) =>

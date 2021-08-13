@@ -1,7 +1,12 @@
 import { css, CSSResultGroup, html, LitElement, TemplateResult } from "lit";
 import { customElement, property, state } from "lit/decorators";
 import "../../../components/ha-svg-icon";
-import { EnergyPreferences, getEnergyPreferences } from "../../../data/energy";
+import {
+  EnergyInfo,
+  EnergyPreferences,
+  getEnergyInfo,
+  getEnergyPreferences,
+} from "../../../data/energy";
 import "../../../layouts/hass-loading-screen";
 import "../../../layouts/hass-tabs-subpage";
 import { haStyle } from "../../../resources/styles";
@@ -30,6 +35,8 @@ class HaConfigEnergy extends LitElement {
   @property({ attribute: false }) public route!: Route;
 
   @state() private _searchParms = new URLSearchParams(window.location.search);
+
+  @state() private _info?: EnergyInfo;
 
   @state() private _preferences?: EnergyPreferences;
 
@@ -80,6 +87,7 @@ class HaConfigEnergy extends LitElement {
           <ha-energy-solar-settings
             .hass=${this.hass}
             .preferences=${this._preferences!}
+            .info=${this._info}
             @value-changed=${this._prefsChanged}
           ></ha-energy-solar-settings>
           <ha-energy-battery-settings
@@ -98,6 +106,7 @@ class HaConfigEnergy extends LitElement {
   }
 
   private async _fetchConfig() {
+    const energyInfoPromise = await getEnergyInfo(this.hass);
     try {
       this._preferences = await getEnergyPreferences(this.hass);
     } catch (e) {
@@ -107,10 +116,12 @@ class HaConfigEnergy extends LitElement {
         this._error = e.message;
       }
     }
+    this._info = await energyInfoPromise;
   }
 
-  private _prefsChanged(ev: CustomEvent) {
+  private async _prefsChanged(ev: CustomEvent) {
     this._preferences = ev.detail.value;
+    this._info = await getEnergyInfo(this.hass);
   }
 
   static get styles(): CSSResultGroup {
